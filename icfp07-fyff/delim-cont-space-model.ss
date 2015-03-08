@@ -9,73 +9,73 @@
 ;;  > (show-control0-loop)
 
 (module delim-cont-space-model mzscheme
-  (require (planet "reduction-semantics.ss" ("robby" "redex.plt" 3))
-           (planet "subst.ss" ("robby" "redex.plt" 3))
-           (planet "gui.ss" ("robby" "redex.plt" 3))
+  (require (planet "reduction-semantics.ss" ("robby" "redex.plt" 4))
+           (planet "subst.ss" ("robby" "redex.plt" 4))
+           (planet "gui.ss" ("robby" "redex.plt" 4))
            (lib "contract.ss")
            (lib "pretty.ss"))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Expression grammar:
 
-  (define ls-grammar
-    (language (P (D ... M))
-              (D (define X V)
-                 (defmacro (X X ...) M))
-              (M * ; <- should only appear in `M' for `([delim-]cont M)'
-                 X
-                 (M M)
-		 (o1 M)
-		 (o2 M M)
-		 V
-                 (if M M M)
-		 (call/cc M)
-                 (prompt M)
-                 (control0 X M)
-                 (reset M)
-                 (shift X M)
-                 (X M M M ...)) ; macro application
-              (V b
-                 #f
-                 (lambda (X) M)
-                 (cont M)
-                 (delim-cont M))
-	      (X (variable-except lambda if
-                                  call/cc cont 
-                                  prompt control0 delim-cont
-                                  shift reset
-                                  zero? +
-                                  null? list cons car cdr
-                                  delay make-delay delay? delay-proc
-                                  * define defmacro))
-	      (b number
-                 (list V ...)
-                 delay-V)
-              (delay-V (delay V))
-              (o1 zero?
-                  null? car cdr
-                  make-delay delay? delay-proc)
-	      (o2 + cons)
-	      
-	      ;; Evaluation contexts:
-	      (E hole
-		 (E M)
-		 (V E)
-		 (o1 E)
-		 (o2 E M)
-		 (o2 V E)
-                 (if E M M)
-                 (call/cc E))
-	      (ME E
-                  (ME M)
-                  (V ME)
-                  (o1 ME)
-                  (o2 ME M)
-                  (o2 V ME)
-                  (if ME M M)
-                  (call/cc ME)
-                  (reset ME)
-                  (prompt ME))))
+  (define-language ls-grammar
+    (P (D ... M))
+    (D (define X V)
+       (defmacro (X X ...) M))
+    (M *         ; <- should only appear in `M' for `([delim-]cont M)'
+       X
+       (M M)
+       (o1 M)
+       (o2 M M)
+       V
+       (if M M M)
+       (call/cc M)
+       (prompt M)
+       (control0 X M)
+       (reset M)
+       (shift X M)
+       (X M M M ...))                   ; macro application
+    (V b
+       #f
+       (lambda (X) M)
+       (cont M)
+       (delim-cont M))
+    (X (variable-except lambda if
+                        call/cc cont
+                        prompt control0 delim-cont
+                        shift reset
+                        zero? +
+                        null? list cons car cdr
+                        delay make-delay delay? delay-proc
+                        * define defmacro))
+    (b number
+       (list V ...)
+       delay-V)
+    (delay-V (delay V))
+    (o1 zero?
+        null? car cdr
+        make-delay delay? delay-proc)
+    (o2 + cons)
+
+    ;; Evaluation contexts:
+    (E hole
+       (E M)
+       (V E)
+       (o1 E)
+       (o2 E M)
+       (o2 V E)
+       (if E M M)
+       (call/cc E))
+    (ME E
+        (ME M)
+        (V ME)
+        (o1 ME)
+        (o2 ME M)
+        (o2 V ME)
+        (if ME M M)
+        (call/cc ME)
+        (reset ME)
+        (prompt ME)))
 
   (define-syntax (define-language-predicates stx)
     (syntax-case stx ()
